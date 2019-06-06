@@ -1,0 +1,7 @@
+[package]
+name = "lisp9-rust"
+version = "0.1.0"
+authors = ["Dominic Pearson <dsp@technoanimal.net>"]
+edition = "2018"
+
+[dependencies]
