@@ -25,13 +25,13 @@ const IMAGEFILE: &str = "ls9.image";
 const IMAGESRC:  &str = "ls9.ls9";
 
 const NNODES:     usize = 262144;
-const NVCELLS:    i64 = 262144;
-const NPORTS:     i32 = 20;
-const TOKLEN:     i32 = 80;
-const CHUNKSIZE:  i32 = 1024;
-const MXMAX:      i32 = 2000;
-const NTRACE:     i32 = 10;
-const PRDEPTH:    i32 = 1024;
+const NVCELLS:    i64   = 262144;
+const NPORTS:     i32   = 20;
+const TOKLEN:     i32   = 80;
+const CHUNKSIZE:  i32   = 1024;
+const MXMAX:      i32   = 2000;
+const NTRACE:     usize = 10;
+const PRDEPTH:    i32   = 1024;
 
 /*
  * Basic data types
@@ -45,8 +45,10 @@ type Uint = u32;
  * Special Objects
  */
 
-fn specialp(x: i32) -> bool {
-    x < 0
+macro_rules! specialp {
+    ($x:expr) => {{
+        $x < 0
+    }}
 }
 
 const NIL:     i32 = -1;
@@ -85,7 +87,7 @@ const CONST_TAG:  i32 = 0x80;  /* Node is immutable */
 
 macro_rules! tag {
     ($pool:expr, $n:expr) => {{
-        let tags = $pool.tags;
+        let tags = &$pool.tags;
         let index = $n as usize;
         tags[index]
     }}
@@ -93,7 +95,7 @@ macro_rules! tag {
 
 macro_rules! car {
     ($pool:expr, $n:expr) => {{
-        let cars = $pool.cars;
+        let cars = &$pool.cars;
         let index = $n as usize;
         cars[index]
     }}
@@ -101,7 +103,7 @@ macro_rules! car {
 
 macro_rules! cdr {
     ($pool:expr, $n:expr) => {{
-        let cdrs = $pool.cdrs;
+        let cdrs = &$pool.cdrs;
         let index = $n as usize;
         cdrs[index]
     }}
@@ -322,40 +324,40 @@ macro_rules! portno {
 // for now we'll just return n
 macro_rules! string {
     ($vpool:expr, $n:expr) => {{
-        $vpool[cdr!($vpool, $n)];
+        $vpool[cdr!($vpool, $n)]
     }}
 }
 
 macro_rules! stringlen {
     ($vpool:expr, $n:expr) => {{
         let index = $n - 2 as usize;
-        $vpool[cdr!($vpool, index)];
+        $vpool[cdr!($vpool, index)]
     }}
 }
 
 macro_rules! symname {
     ($vpool:expr, $n:expr) => {{
-        string!($vpool, $n);
+        string!($vpool, $n)
     }}
 }
 
 macro_rules! vector {
     ($vpool:expr, $n:expr) => {{
         let index = $n as usize;
-        $vpool[index];
+        $vpool[index]
     }}
 }
 
 macro_rules! veclink {
     ($vpool:expr, $n:expr) => {{
         let index = $n as usize;
-        $vpool[index - 2];
+        $vpool[index - 2]
     }}
 }
 
 macro_rules! vecndx {
     ($vpool:expr, $n:expr) => {{
-        veclink!($vpool, $n);
+        veclink!($vpool, $n)
     }}
 }
 
@@ -369,7 +371,7 @@ macro_rules! vecsize {
 
 macro_rules! veclen {
     ($vpool:expr, $n:expr) => {{
-        vecsize!(stringlen!($vpool, $n));
+        vecsize!(stringlen!($vpool, $n))
     }}
 }
 
@@ -379,15 +381,197 @@ macro_rules! veclen {
 
 macro_rules! charp {
     ($pool:expr, $n:expr) => {{
-        !specialp!() && (tag!($pool, $n) & ATOM_TAG) && T_CHAR == car($pool, $n);
+        !specialp!($n) && (tag!($pool, $n) & ATOM_TAG == 1) && T_CHAR == car!($pool, $n)
     }}
 }
 
 macro_rules! closurep {
     ($pool:expr, $n:expr) => {{
-        !specialp!(n) && (tag!($pool, $n) & ATOM_TAG) && T_CLOSURE == car($pool, $n);
+        !specialp!($n) && (tag!($pool, $n) & ATOM_TAG == 1) && T_CLOSURE == car!($pool, $n)
     }}
 }
+
+macro_rules! ctagp {
+    ($pool:expr, $n:expr) => {{
+        !specialp!($n) && (tag($pool, $n) & ATOM_TAG == 1) && T_CATCHTAG == car!($pool, $n)
+    }}
+}
+
+macro_rules! eofp {
+    ($n:expr) => {{
+        EOFMARK == $n
+    }}
+}
+
+macro_rules! fixp {
+    ($pool:expr, $n:expr) => {{
+        !specialp!($n) && (tag!($pool, $n) & ATOM_TAG == 1) && T_FIXNUM == car!($pool, $n)
+    }}
+}
+
+macro_rules! inport {
+    ($pool:expr, $n:expr) => {{
+        !specialp!($n) && (tag!($pool, $n) & ATOM_TAG == 1) && (tag!($pool, $n) & PORT_TAG == 1) && T_INPORT == car!($pool, $n)
+    }}
+}
+
+macro_rules! outport {
+    ($pool:expr, $n:expr) => {{
+        !specialp!($n) && (tag!($pool, $n) & ATOM_TAG == 1) && (tag!($pool, $n) & PORT_TAG == 1) && T_OUTPORT == car!($pool, $n)
+    }}
+}
+
+macro_rules! stringp {
+    ($pool:expr, $n:expr) => {{
+        !specialp!($n) && (tag!($pool, $n) & VECTOR_TAG == 1) && T_STRING == car!($pool, $n)
+    }}
+}
+
+macro_rules! symbolp {
+    ($pool:expr, $n:expr) => {{
+        !specialp!($n) && (tag!($pool, $n) & VECTOR_TAG == 1) && T_SYMBOL == car!($pool, $n)
+    }}
+}
+
+macro_rules! vectorp {
+    ($pool:expr, $n:expr) => {{
+        !specialp!($n) && (tag!($pool, $n) & VECTOR_TAG == 1) && T_VECTOR == car!($pool, $n)
+    }}
+}
+
+macro_rules! atomp {
+    ($pool:expr, $n:expr) => {{
+        specialp!($n) || (tag!($pool, $n) & ATOM_TAG == 1) || (tag!($pool, $n) & VECTOR_TAG == 1)
+    }}
+}
+
+macro_rules! pairp {
+    ($pool:expr, $x:expr) => {{
+        !atomp!($pool, $x)
+    }}
+}
+
+macro_rules! listp {
+    ($pool:expr, $x:expr) => {{
+        NIL == $x || pairp!($pool, $x)
+    }}
+}
+
+macro_rules! constp {
+    ($pool:expr, $n:expr) => {{
+        !specialp!($n) && (tag!($pool, $n) & CONST_TAG == 1)
+    }}
+}
+
+/*
+ * Abstract machine opcodes
+ */
+
+enum OpCodes {
+    OpIll, OpApplis, OpApplist, OpApply, OpTailapp, OpQuote, OpArg, OpRef, OpPush,
+    OpPushtrue, OpPushval, OpPop, OpDrop, OpJmp, OpBrf, OpBrt, OpHalt, OpCatchstar,
+    OpThrowstar, OpClosure, OpMkenv, OpPropenv, OpCpref, OpCparg, OpEnter, OpEntcol,
+    OpReturn, OpSetarg, OpSetref, OpMacro,
+
+    OpAbs, OpAlphac, OpAtom, OpBitop, OpCaar, OpCadr, OpCar, OpCdar, OpCddr, OpCdr,
+    OpCequal, OpCgrtr, OpCgteq, OpChar, OpCharp, OpCharval, OpCless, OpClosePort,
+    OpClteq, OpCmdline, OpConc, OpCons, OpConstp, OpCtagp, OpDelete, OpDiv,
+    OpDowncase, OpDumpImage, OpEofp, OpEq, OpEqual, OpError, OpError2, OpErrport,
+    OpEval, OpExistsp, OpFixp, OpFormat, OpFunp, OpGc, OpGensym, OpGrtr, OpGteq,
+    OpInport, OpInportp, OpLess, OpListstr, OpListvec, OpLoad, OpLowerc, OpLteq,
+    OpMax, OpMin, OpMinus, OpMkstr, OpMkvec, OpMx, OpMx1, OpNconc, OpNegate,
+    OpNreconc, OpNull, OpNumeric, OpNumstr, OpObtab, OpOpenInfile, OpOpenOutfile,
+    OpOutport, OpOutportp, OpPair, OpPeekc, OpPlus, OpPrin, OpPrinc, OpQuit, OpRead,
+    OpReadc, OpReconc, OpRem, OpSconc, OpSequal, OpSetcar, OpSetcdr, OpSetInport,
+    OpSetOutport, OpSfill, OpSgrtr, OpSgteq, OpSiequal, OpSigrtr, OpSigteq,
+    OpSiless, OpSilteq, OpSless, OpSlteq, OpSref, OpSset, OpSsize, OpStringp,
+    OpStrlist, OpStrnum, OpSubstr, OpSubvec, OpSymbol, OpSymbolp, OpSymname,
+    OpSymtab, OpSyscmd, OpTimes, OpUntag, OpUpcase, OpUpperc, OpVconc, OpVeclist,
+    OpVectorp, OpVfill, OpVref, OpVset, OpVsize, OpWhitec, OpWritec,
+}
+
+/*
+ * I/O Functions
+ */
+
+macro_rules! printb {
+    ($s:expr) => {{
+        prints($s)
+    }}
+}
+
+macro_rules! nl {
+    () => {{
+        prints("\n")
+    }}
+}
+
+/*
+ * Error reporting and handling
+ */
+
+type TraceRing = Vec<i32>;
+type TracePointer = i32;
+
+struct Trace {
+    trace: TraceRing,
+    p: TracePointer
+}
+
+// int Trace[NTRACE];
+// int Tp = 0;
+
+fn alloc_tracevec() -> Trace {
+    let mut trace: TraceRing = Vec::with_capacity(NTRACE);
+    let p: TracePointer = 0;
+
+    for _i in 0 .. NTRACE {
+        trace.push(-1);
+    }
+
+    Trace { trace, p }
+}
+
+fn clrtrace(trace: &mut Trace) {
+    for i in 0 .. NTRACE {
+        trace.trace[i] = -1;
+    }
+}
+
+fn gottrace(trace: &Trace) -> bool {
+    for i in 0 .. NTRACE {
+        if trace.trace[i] != -1 {
+            return true;
+        }
+    }
+    false
+}
+
+// int Plimit = 0;
+// int Line = 1;
+// cell Files = NIL;
+// cell Symbols;
+
+// Plimit should probably be thrown somewhere else.
+// it's a global, mutable state variable for limiting
+// printer output.
+
+// fn report(files: &Vec<Cell>, s: &Vec<Cell>, x: Cell) {
+//     let o = set_outport(2);
+//     prints("*** error: ");
+//     prints(s);
+//     if x != UNDEF {
+//         prints(": ");
+//         let mut Plimit = 100;
+//         prin(x);
+//         let mut Plimit = 0;
+//     }
+//     nl!();
+//     if files != NIL {
+//         prints("*** file: ");
+//         printb!(string!(files, car!(files, 0)));
+//     }
+// }
 
 fn alloc_nodepool() -> NodePool {
     let mut cars: Car = Vec::with_capacity(NNODES);
@@ -401,13 +585,27 @@ fn alloc_nodepool() -> NodePool {
     NodePool{ cars, cdrs, tags }
 }
 
-fn main () {
+fn main() {
     /*
      * Memory pool allocation.
      */
     let nodepool: NodePool = alloc_nodepool();
 
+    /*
+     * Trace structure allocation.
+     */
+    let mut trace = alloc_tracevec();
+
+    // let mut files: Vec<Cell> = Vec::with_capacity(NTRACE);
+
+    println!("Trace vector position 0 is -1? {}", trace.trace[0] == -1);
+    println!("Got a trace? {}", gottrace(&trace));
     println!("Car: {}", car!(nodepool, 0));
     println!("Cdr: {}", cdr!(nodepool, 0));
     println!("Tag: {}", tag!(nodepool, 0));
+    println!("Special? {}", specialp!(-1));
+    println!("EOFMARK? {}", eofp!(EOFMARK));
+    println!("Bitwise AND, {}", ATOM_TAG & ATOM_TAG == 1);
+    println!("List? {}", listp!(nodepool, NIL));
+    println!("Constant? {}", constp!(nodepool, 0));
 }
