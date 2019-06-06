@@ -573,6 +573,61 @@ fn gottrace(trace: &Trace) -> bool {
 //     }
 // }
 
+// noop
+fn report(s: &Vec<Cell>, y: Cell) -> Cell {
+    0
+}
+
+// noop
+fn bindset(x: Cell, y: Vec<Cell>) -> Cell {
+    x
+}
+
+// noop
+fn assq(x: Cell, y: Cell) -> Cell {
+    x
+}
+
+// noop
+fn mkstr(x: &Vec<Cell>, l: i32) -> Vec<Cell> {
+    Vec::with_capacity(0)
+}
+
+// noop
+fn strlen(s: &Vec<Cell>) -> i32 {
+    0
+}
+
+// noop
+fn longjmp(tag: i32, n: i32) {
+}
+
+// Rust, I think, has no good concept of jump buffers, so this entire
+// set of control flow mechanics may need to be thrown out the window.
+// type JmpBuf
+
+// needs rewriting, uses C concepts.
+fn error(pool: &Vec<Cell>, s: &Vec<Cell>, x: Cell, s_errtag: Cell, s_errval: Cell, glob: Cell) {
+    let n: Cell = assq(s_errtag, glob);
+    let handler: Cell = if NIL == n { NIL } else { cadr!(pool, n) };
+    if handler != NIL {
+        let n: Cell = assq(s_errval, glob);
+        if n != NIL && cadr!(pool, n) == handler {
+            bindset(s_errval, mkstr(s, strlen(s)));
+        }
+        longjmp(0, 1); // probably needs refactoring, longjmp in rust is not good.
+    }
+    report(s, x);
+    longjmp(0, 1);
+}
+
+fn expect(pool: &Vec<Cell>, who: &Vec<Cell>, what: &Vec<Cell>, got: Cell) {
+    let b: Vec<Cell> = Vec::with_capacity(100);
+
+    sprintf(&b, "%s: expected %s", &who, &what);
+    error(pool, &b, got, 0, 0, 0);
+}
+
 fn alloc_nodepool() -> NodePool {
     let mut cars: Car = Vec::with_capacity(NNODES);
     let mut cdrs: Cdr = Vec::with_capacity(NNODES);
