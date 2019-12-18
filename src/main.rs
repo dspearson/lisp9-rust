@@ -25,7 +25,7 @@ const IMAGEFILE: &str = "ls9.image";
 const IMAGESRC:  &str = "ls9.ls9";
 
 const NNODES:     usize = 262144;
-const NVCELLS:    i64   = 262144;
+const NVCELLS:    usize = 262144;
 const NPORTS:     i32   = 20;
 const TOKLEN:     i32   = 80;
 const CHUNKSIZE:  i32   = 1024;
@@ -95,7 +95,8 @@ macro_rules! tag {
 
 macro_rules! car {
     ($pool:expr, $n:expr) => {{
-        let cars = &$pool.cars;
+        let pool: &NodePool = $pool;
+        let cars = &pool.cars;
         let index = $n as usize;
         cars[index]
     }}
@@ -103,7 +104,8 @@ macro_rules! car {
 
 macro_rules! cdr {
     ($pool:expr, $n:expr) => {{
-        let cdrs = &$pool.cdrs;
+        let pool: &NodePool = $pool;
+        let cdrs = &pool.cdrs;
         let index = $n as usize;
         cdrs[index]
     }}
@@ -111,169 +113,169 @@ macro_rules! cdr {
 
 macro_rules! caar {
     ($pool:expr, $n:expr) => {{
-        car!(car!($pool, $n))
+        car!($pool, car!($pool, $n))
     }}
 }
 
 macro_rules! cadr {
     ($pool:expr, $n:expr) => {{
-        car!(cdr!($pool, $n))
+        car!($pool, cdr!($pool, $n))
     }}
 }
 
 macro_rules! cdar {
     ($pool:expr, $n:expr) => {{
-        cdr!(car!($pool, $n))
+        cdr!($pool, car!($pool, $n))
     }}
 }
 
 macro_rules! cddr {
     ($pool:expr, $n:expr) => {{
-        cdr!(cdr!($pool, $n))
+        cdr!($pool, cdr!($pool, $n))
     }}
 }
 
 macro_rules! caaar {
     ($pool:expr, $n:expr) => {{
-        car!(car!(car!($pool, $n)))
+        car!($pool, car!($pool, (car!($pool, $n))))
     }}
 }
 
 macro_rules! caadr {
     ($pool:expr, $n:expr) => {{
-        car!(car!(cdr!($pool, $n)))
+        car!($pool, car!($pool, cdr!($pool, $n)))
     }}
 }
 
 macro_rules! cadar {
     ($pool:expr, $n:expr) => {{
-        car!(cdr!(car!($pool, $n)))
+        car!($pool, cdr!($pool, car!($pool, $n)))
     }}
 }
 
 macro_rules! caddr {
     ($pool:expr, $n:expr) => {{
-        car!(car!(cdr!($pool, $n)))
+        car!($pool, car!($pool, cdr!($pool, $n)))
     }}
 }
 
 macro_rules! cdaar {
     ($pool:expr, $n:expr) => {{
-        cdr!(car!(car!($pool, $n)))
+        cdr!($pool, car!($pool, car!($pool, $n)))
     }}
 }
 
 macro_rules! cdadr {
     ($pool:expr, $n:expr) => {{
-        cdr!(car!(cdr!($pool, $n)))
+        cdr!($pool, car!($pool, cdr!($pool, $n)))
     }}
 }
 
 macro_rules! cddar {
     ($pool:expr, $n:expr) => {{
-        cdr!(cdr!(car!($pool, $n)))
+        cdr!($pool, cdr!($pool, car!($pool, $n)))
     }}
 }
 
 macro_rules! cdddr {
     ($pool:expr, $n:expr) => {{
-        car!(cdr!(cdr!($pool, $n)))
+        car!($pool, cdr!($pool, cdr!($pool, $n)))
     }}
 }
 
 macro_rules! caaaar {
     ($pool:expr, $n:expr) => {{
-        car!(car!(car!(car!($pool, $n))))
+        car!($pool, car!($pool, car!($pool, car!($pool, $n))))
     }}
 }
 
 macro_rules! caaadr {
     ($pool:expr, $n:expr) => {{
-        car!(car!(car!(cdr!($pool, $n))))
+        car!($pool, car!($pool, car!($pool, cdr!($pool, $n))))
     }}
 }
 
 macro_rules! caadar {
     ($pool:expr, $n:expr) => {{
-        car!(car!(cdr!(car!($pool, $n))))
+        car!($pool, car!($pool, cdr!($pool, car!($pool, $n))))
     }}
 }
 
 macro_rules! caaddr {
     ($pool:expr, $n:expr) => {{
-        car!(car!(cdr!(cdr!($pool, $n))))
+        car!($pool, car!($pool, cdr!($pool, cdr!($pool, $n))))
     }}
 }
 
 macro_rules! cadaar {
     ($pool:expr, $n:expr) => {{
-        car!(cdr!(car!(car!($pool, $n))))
+        car!($pool, cdr!($pool, car!($pool, car!($pool, $n))))
     }}
 }
 
 macro_rules! cadadr {
     ($pool:expr, $n:expr) => {{
-        car!(cdr!(car!(cdr!($pool, $n))))
+        car!($pool, cdr!($pool, car!($pool, cdr!($pool, $n))))
     }}
 }
 
 macro_rules! caddar {
     ($pool:expr, $n:expr) => {{
-        car!(cdr!(cdr!(car!($pool, $n))))
+        car!($pool, cdr!($pool, cdr!($pool, car!($pool, $n))))
     }}
 }
 
 macro_rules! cadddr {
     ($pool:expr, $n:expr) => {{
-        car!(cdr!(cdr!(cdr!($pool, $n))))
+        car!($pool, cdr!($pool, cdr!($pool, cdr!($pool, $n))))
     }}
 }
 
 macro_rules! cdaaar {
     ($pool:expr, $n:expr) => {{
-        cdr!(car!(car!(car!($pool, $n))))
+        cdr!($pool, car!($pool, car!($pool, car!($pool, $n))))
     }}
 }
 
 macro_rules! cdaadr {
     ($pool:expr, $n:expr) => {{
-        cdr!(car!(car!(cdr!($pool, $n))))
+        cdr!($pool, car!($pool, car!($pool, cdr!($pool, $n))))
     }}
 }
 
 macro_rules! cdadar {
     ($pool:expr, $n:expr) => {{
-        cdr!(car!(cdr!(cdr!($pool, $n))))
+        cdr!($pool, car!($pool, cdr!($pool, cdr!($pool, $n))))
     }}
 }
 
 macro_rules! cdaddr {
     ($pool:expr, $n:expr) => {{
-        cdr!(car!(cdr!(cdr!($pool, $n))))
+        cdr!($pool, car!($pool, cdr!($pool, cdr!($pool, $n))))
     }}
 }
 
 macro_rules! cddaar {
     ($pool:expr, $n:expr) => {{
-        cdr!(cdr!(car!(car!($pool, $n))))
+        cdr!($pool, cdr!($pool, car!($pool, car!($pool, $n))))
     }}
 }
 
 macro_rules! cddadr {
     ($pool:expr, $n:expr) => {{
-        cdr!(cdr!(car!(cdr!($pool, $n))))
+        cdr!($pool, cdr!($pool, car!($pool, cdr!($pool, $n))))
     }}
 }
 
 macro_rules! cdddar {
     ($pool:expr, $n:expr) => {{
-        cdr!(cdr!(cdr!(car!($pool, $n))))
+        cdr!($pool, cdr!($pool, cdr!($pool, car!($pool, $n))))
     }}
 }
 
 macro_rules! cddddr {
     ($pool:expr, $n:expr) => {{
-        cdr!(cdr!(cdr!(cdr!($pool, $n))))
+        cdr!($pool, cdr!($pool, cdr!($pool, cdr!($pool, $n))))
     }}
 }
 
@@ -607,7 +609,7 @@ fn longjmp(tag: i32, n: i32) {
 // type JmpBuf
 
 // needs rewriting, uses C concepts.
-fn error(pool: &Vec<Cell>, s: &Vec<Cell>, x: Cell, s_errtag: Cell, s_errval: Cell, glob: Cell) {
+fn error(pool: &NodePool, s: &Vec<Cell>, x: Cell, s_errtag: Cell, s_errval: Cell, glob: Cell) {
     let n: Cell = assq(s_errtag, glob);
     let handler: Cell = if NIL == n { NIL } else { cadr!(pool, n) };
     if handler != NIL {
@@ -621,11 +623,20 @@ fn error(pool: &Vec<Cell>, s: &Vec<Cell>, x: Cell, s_errtag: Cell, s_errval: Cel
     longjmp(0, 1);
 }
 
-fn expect(pool: &Vec<Cell>, who: &Vec<Cell>, what: &Vec<Cell>, got: Cell) {
-    let b: Vec<Cell> = Vec::with_capacity(100);
+// fn expect(pool: &Vec<Cell>, who: &Vec<Cell>, what: &Vec<Cell>, got: Cell) {
+//     let b: Vec<Cell> = Vec::with_capacity(100);
 
-    sprintf(&b, "%s: expected %s", &who, &what);
-    error(pool, &b, got, 0, 0, 0);
+//     sprintf(&b, "%s: expected %s", &who, &what);
+//     error(pool, &b, got, 0, 0, 0);
+// }
+
+// exit
+fn fatal(s: char) {
+    0;
+}
+
+fn readc() -> i32 {
+    return 0;
 }
 
 fn alloc_nodepool() -> NodePool {
@@ -633,12 +644,32 @@ fn alloc_nodepool() -> NodePool {
     let mut cdrs: Cdr = Vec::with_capacity(NNODES);
     let mut tags: Tag = Vec::with_capacity(NNODES);
 
-    cars.push(0);
-    cdrs.push(0);
-    tags.push(ATOM_TAG);
+    for _i in 0 .. NNODES {
+        cars.push(0);
+        cdrs.push(0);
+        tags.push(0);
+    }
 
     NodePool{ cars, cdrs, tags }
 }
+
+fn alloc_vecpool() -> Vectors {
+    let mut vectors: Vectors = Vec::with_capacity(NVCELLS);
+
+    for _i in 0 .. NVCELLS {
+        vectors.push(0);
+    }
+
+    vectors
+}
+
+const OBFREE:  i32 = 0;
+const OBALLOC: i32 = 1;
+const OBUSED:  i32 = 2;
+
+const ISIZE0:  i32 = 1;
+const ISIZE1:  i32 = 3;
+const ISIZE2:  i32 = 5;
 
 fn main() {
     /*
@@ -651,13 +682,13 @@ fn main() {
      */
     let mut trace = alloc_tracevec();
 
-    // let mut files: Vec<Cell> = Vec::with_capacity(NTRACE);
+    let mut files: Vec<Cell> = Vec::with_capacity(NTRACE);
 
     println!("Trace vector position 0 is -1? {}", trace.trace[0] == -1);
     println!("Got a trace? {}", gottrace(&trace));
-    println!("Car: {}", car!(nodepool, 0));
-    println!("Cdr: {}", cdr!(nodepool, 0));
-    println!("Tag: {}", tag!(nodepool, 0));
+    println!("Car: {}", car!(&nodepool, 0));
+    println!("Cdr: {}", cdr!(&nodepool, 0));
+    println!("Tag: {}", tag!(&nodepool, 0));
     println!("Special? {}", specialp!(-1));
     println!("EOFMARK? {}", eofp!(EOFMARK));
     println!("Bitwise AND, {}", ATOM_TAG & ATOM_TAG == 1);
